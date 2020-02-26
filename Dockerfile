@@ -1,14 +1,14 @@
 # https://hub.docker.com/_/microsoft-dotnet-core
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build
-WORKDIR /source
+WORKDIR /src
 
 # copy csproj and restore as distinct layers
 COPY *.sln .
-COPY src/IO.Swagger/*.csproj ./aspnetapp/
+COPY src/IO.Swagger/*.csproj ./IO.Swagger/
 RUN dotnet restore -r linux-musl-x64
 
 # copy everything else and build app
-COPY src/IO.Swagger/. ./aspnetapp/
+COPY src/IO.Swagger/. ./IO.Swagger/
 WORKDIR /src/IO.Swagger
 RUN dotnet publish -c release -o /app -r linux-musl-x64 --self-contained false --no-restore
 
