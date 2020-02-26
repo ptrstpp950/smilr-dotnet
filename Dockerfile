@@ -5,7 +5,6 @@ WORKDIR /source
 # copy csproj and restore as distinct layers
 COPY *.sln .
 COPY src/IO.Swagger/*.csproj ./src/IO.Swagger/
-RUN ls -all -R
 RUN dotnet restore -r linux-musl-x64
 
 # copy everything else and build app
