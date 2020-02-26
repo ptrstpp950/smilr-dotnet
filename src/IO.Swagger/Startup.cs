@@ -10,6 +10,7 @@
 
 using System;
 using System.IO;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -19,6 +20,7 @@ using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using IO.Swagger.Filters;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 namespace IO.Swagger
@@ -56,9 +58,12 @@ namespace IO.Swagger
                 {
                     options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
                     options.JsonSerializerOptions.PropertyNamingPolicy = null;
+                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 })
                 .AddXmlSerializerFormatters();
 
+            services.AddDbContext<ApplicationDbContext>(
+                opt => opt.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
             services
                 .AddSwaggerGen(c =>
@@ -85,8 +90,10 @@ namespace IO.Swagger
         /// <param name="app"></param>
         /// <param name="env"></param>
         /// <param name="loggerFactory"></param>
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        /// <param name="dataContext"></param>
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, ApplicationDbContext dataContext)
         {
+            dataContext.Database.Migrate();
             app
                 .UseMvc()
                 .UseDefaultFiles()

@@ -32,6 +32,7 @@ namespace IO.Swagger.Models
         /// <value>Id of this event </value>
         [Required]
         [DataMember(Name="_id")]
+        [JsonPropertyName("_id")]
         public string Id { get; set; }
 
         /// <summary>
@@ -54,25 +55,25 @@ namespace IO.Swagger.Models
             /// Enum EventEnum for event
             /// </summary>
             [EnumMember(Value = "event")]
-            EventEnum = 1,
+            Event = 1,
             
             /// <summary>
             /// Enum HackEnum for hack
             /// </summary>
             [EnumMember(Value = "hack")]
-            HackEnum = 2,
+            Hack = 2,
             
             /// <summary>
             /// Enum LabEnum for lab
             /// </summary>
             [EnumMember(Value = "lab")]
-            LabEnum = 3,
+            Lab = 3,
             
             /// <summary>
             /// Enum WorkshopEnum for workshop
             /// </summary>
             [EnumMember(Value = "workshop")]
-            WorkshopEnum = 4
+            Workshop = 4
         }
 
         /// <summary>
@@ -81,7 +82,8 @@ namespace IO.Swagger.Models
         /// <value>Type of this event </value>
         [Required]
         [DataMember(Name="type")]
-        public TypeEnum? Type { get; set; }
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public TypeEnum Type { get; set; }
 
         /// <summary>
         /// Start date in RFC 3339 format 
@@ -89,7 +91,7 @@ namespace IO.Swagger.Models
         /// <value>Start date in RFC 3339 format </value>
         [Required]
         [DataMember(Name="start")]
-        public string Start { get; set; }
+        public DateTimeOffset Start { get; set; }
 
         /// <summary>
         /// End date in RFC 3339 format 
@@ -97,7 +99,7 @@ namespace IO.Swagger.Models
         /// <value>End date in RFC 3339 format </value>
         [Required]
         [DataMember(Name="end")]
-        public string End { get; set; }
+        public DateTimeOffset End { get; set; }
 
         /// <summary>
         /// Gets or Sets Topics

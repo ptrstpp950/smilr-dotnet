@@ -52,30 +52,6 @@ namespace IO.Swagger.Controllers
         /// <summary>
         /// 
         /// </summary>
-        /// <remarks>Bulk load events and feedback</remarks>
-        /// <param name="bulk">Bulk payload</param>
-        /// <response code="200">Status message</response>
-        /// <response code="500">Unexpected error</response>
-        [HttpPost]
-        [Route("/api/bulk")]
-        [ValidateModelState]
-        [SwaggerOperation("BulkLoad")]
-        [SwaggerResponse(statusCode: 500, type: typeof(ProblemDetails), description: "Unexpected error")]
-        public virtual IActionResult BulkLoad([FromBody]Bulk bulk)
-        { 
-            //TODO: Uncomment the next line to return response 200 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(200);
-
-            //TODO: Uncomment the next line to return response 500 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(500, default(ProblemDetails));
-
-
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
         /// <remarks>This returns health / info</remarks>
         /// <response code="200">An array of events</response>
         [HttpGet]

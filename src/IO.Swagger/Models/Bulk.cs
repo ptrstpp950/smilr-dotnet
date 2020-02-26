@@ -15,6 +15,9 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using System.Text.Json;
+using IO.Swagger.Attributes;
+using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace IO.Swagger.Models
 { 

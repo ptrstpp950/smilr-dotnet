@@ -14,10 +14,13 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
 using IO.Swagger.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using IO.Swagger.Models;
+using Microsoft.EntityFrameworkCore;
 using ProblemDetails = IO.Swagger.Models.ProblemDetails;
 
 namespace IO.Swagger.Controllers
@@ -28,11 +31,19 @@ namespace IO.Swagger.Controllers
     [ApiController]
     public class EventsApiController : ControllerBase
     { 
+        private readonly ApplicationDbContext _dbContext;
+
+        /// <inheritdoc />
+        public EventsApiController(ApplicationDbContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
+
         /// <summary>
         /// 
         /// </summary>
         /// <remarks>Create a new event</remarks>
-        /// <param name="_event">The new event to create</param>
+        /// <param name="event">The new event to create</param>
         /// <response code="200">An array of events</response>
         /// <response code="400">Validation error, invalid event</response>
         /// <response code="500">Unexpected error</response>
@@ -43,25 +54,19 @@ namespace IO.Swagger.Controllers
         [SwaggerResponse(statusCode: 200, type: typeof(List<Event>), description: "An array of events")]
         [SwaggerResponse(statusCode: 400, type: typeof(ProblemDetails), description: "Validation error, invalid event")]
         [SwaggerResponse(statusCode: 500, type: typeof(ProblemDetails), description: "Unexpected error")]
-        public virtual IActionResult EventCreate([FromBody]Event _event)
-        { 
-            //TODO: Uncomment the next line to return response 200 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(200, default(List<Event>));
-
-            //TODO: Uncomment the next line to return response 400 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(400, default(ProblemDetails));
-
-            //TODO: Uncomment the next line to return response 500 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(500, default(ProblemDetails));
-
-            string exampleJson = null;
-            exampleJson = "[ {\n  \"topics\" : [ {\n    \"id\" : 2,\n    \"desc\" : \"How to make nice cheese\"\n  }, {\n    \"id\" : 2,\n    \"desc\" : \"How to make nice cheese\"\n  } ],\n  \"start\" : \"2020-02-15\",\n  \"end\" : \"2020-02-16\",\n  \"_id\" : \"FOO12\",\n  \"title\" : \"Workshop about cheese\",\n  \"type\" : \"event\"\n}, {\n  \"topics\" : [ {\n    \"id\" : 2,\n    \"desc\" : \"How to make nice cheese\"\n  }, {\n    \"id\" : 2,\n    \"desc\" : \"How to make nice cheese\"\n  } ],\n  \"start\" : \"2020-02-15\",\n  \"end\" : \"2020-02-16\",\n  \"_id\" : \"FOO12\",\n  \"title\" : \"Workshop about cheese\",\n  \"type\" : \"event\"\n} ]";
-            
-            var example = exampleJson != null
-            ? JsonSerializer.Deserialize<List<Event>>(exampleJson)
-            : default(List<Event>);
-            //TODO: Change the data returned
-            return new ObjectResult(example);
+        public virtual async Task<IActionResult> EventCreate([FromBody] Event @event)
+        {
+            try
+            {
+                _dbContext.Events.Add(@event);
+                await _dbContext.SaveChangesAsync();
+                return EventGetAll();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500,
+                    new ProblemDetails() {Details = ex.Message, Error = true, Source = ex.Source, Title = "fatal"});
+            }
         }
 
         /// <summary>
@@ -78,19 +83,14 @@ namespace IO.Swagger.Controllers
         [SwaggerOperation("EventDelete")]
         [SwaggerResponse(statusCode: 404, type: typeof(ProblemDetails), description: "Event with given id not found")]
         [SwaggerResponse(statusCode: 500, type: typeof(ProblemDetails), description: "Unexpected error  /")]
-        public virtual IActionResult EventDelete([FromRoute][Required]string id)
-        { 
-            //TODO: Uncomment the next line to return response 200 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(200);
-
-            //TODO: Uncomment the next line to return response 404 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(404, default(ProblemDetails));
-
-            //TODO: Uncomment the next line to return response 500 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(500, default(ProblemDetails));
-
-
-            throw new NotImplementedException();
+        public virtual async Task<IActionResult> EventDelete([FromRoute] [Required] string id)
+        {
+            var evt = await _dbContext.FindAsync<Event>(id);
+            if (evt == null)
+                return StatusCode(404);
+            _dbContext.Remove(evt);
+            await _dbContext.SaveChangesAsync();
+            return StatusCode(200);
         }
 
         /// <summary>
@@ -107,20 +107,7 @@ namespace IO.Swagger.Controllers
         [SwaggerResponse(statusCode: 500, type: typeof(ProblemDetails), description: "Unexpected error")]
         public virtual IActionResult EventGetAll()
         { 
-            //TODO: Uncomment the next line to return response 200 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(200, default(List<Event>));
-
-            //TODO: Uncomment the next line to return response 500 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(500, default(ProblemDetails));
-
-            string exampleJson = null;
-            exampleJson = "[ {\n  \"topics\" : [ {\n    \"id\" : 2,\n    \"desc\" : \"How to make nice cheese\"\n  }, {\n    \"id\" : 2,\n    \"desc\" : \"How to make nice cheese\"\n  } ],\n  \"start\" : \"2020-02-15\",\n  \"end\" : \"2020-02-16\",\n  \"_id\" : \"FOO12\",\n  \"title\" : \"Workshop about cheese\",\n  \"type\" : \"event\"\n}, {\n  \"topics\" : [ {\n    \"id\" : 2,\n    \"desc\" : \"How to make nice cheese\"\n  }, {\n    \"id\" : 2,\n    \"desc\" : \"How to make nice cheese\"\n  } ],\n  \"start\" : \"2020-02-15\",\n  \"end\" : \"2020-02-16\",\n  \"_id\" : \"FOO12\",\n  \"title\" : \"Workshop about cheese\",\n  \"type\" : \"event\"\n} ]";
-            
-            var example = exampleJson != null
-            ? JsonSerializer.Deserialize<List<Event>>(exampleJson)
-            : default(List<Event>);
-            //TODO: Change the data returned
-            return new ObjectResult(example);
+            return new ObjectResult(_dbContext.Events.Select(x => x).ToArray());
         }
 
         /// <summary>
@@ -136,22 +123,9 @@ namespace IO.Swagger.Controllers
         [SwaggerOperation("EventGetFiltered")]
         [SwaggerResponse(statusCode: 200, type: typeof(List<Event>), description: "An array of events")]
         [SwaggerResponse(statusCode: 500, type: typeof(ProblemDetails), description: "Unexpected error")]
-        public virtual IActionResult EventGetFiltered([FromRoute][Required]string time)
-        { 
-            //TODO: Uncomment the next line to return response 200 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(200, default(List<Event>));
-
-            //TODO: Uncomment the next line to return response 500 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(500, default(ProblemDetails));
-
-            string exampleJson = null;
-            exampleJson = "[ {\n  \"topics\" : [ {\n    \"id\" : 2,\n    \"desc\" : \"How to make nice cheese\"\n  }, {\n    \"id\" : 2,\n    \"desc\" : \"How to make nice cheese\"\n  } ],\n  \"start\" : \"2020-02-15\",\n  \"end\" : \"2020-02-16\",\n  \"_id\" : \"FOO12\",\n  \"title\" : \"Workshop about cheese\",\n  \"type\" : \"event\"\n}, {\n  \"topics\" : [ {\n    \"id\" : 2,\n    \"desc\" : \"How to make nice cheese\"\n  }, {\n    \"id\" : 2,\n    \"desc\" : \"How to make nice cheese\"\n  } ],\n  \"start\" : \"2020-02-15\",\n  \"end\" : \"2020-02-16\",\n  \"_id\" : \"FOO12\",\n  \"title\" : \"Workshop about cheese\",\n  \"type\" : \"event\"\n} ]";
-            
-            var example = exampleJson != null
-            ? JsonSerializer.Deserialize<List<Event>>(exampleJson)
-            : default(List<Event>);
-            //TODO: Change the data returned
-            return new ObjectResult(example);
+        public virtual IActionResult EventGetFiltered([FromRoute][Required]DateTimeOffset time)
+        {
+            return new ObjectResult(_dbContext.Events.Where(x => x.Start >= time).Select(x => x).ToArray());
         }
 
         /// <summary>
@@ -169,25 +143,13 @@ namespace IO.Swagger.Controllers
         [SwaggerResponse(statusCode: 200, type: typeof(List<Event>), description: "An array of events")]
         [SwaggerResponse(statusCode: 404, type: typeof(ProblemDetails), description: "Event with given id not found")]
         [SwaggerResponse(statusCode: 500, type: typeof(ProblemDetails), description: "Unexpected error  /")]
-        public virtual IActionResult EventGetSingle([FromRoute][Required]string id)
-        { 
-            //TODO: Uncomment the next line to return response 200 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(200, default(List<Event>));
+        public virtual async Task<IActionResult> EventGetSingle([FromRoute] [Required] string id)
+        {
+            var evt = await _dbContext.FindAsync<Event>(id);
+            if (evt == null)
+                return StatusCode(404);
+            return new ObjectResult(evt);
 
-            //TODO: Uncomment the next line to return response 404 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(404, default(ProblemDetails));
-
-            //TODO: Uncomment the next line to return response 500 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(500, default(ProblemDetails));
-
-            string exampleJson = null;
-            exampleJson = "[ {\n  \"topics\" : [ {\n    \"id\" : 2,\n    \"desc\" : \"How to make nice cheese\"\n  }, {\n    \"id\" : 2,\n    \"desc\" : \"How to make nice cheese\"\n  } ],\n  \"start\" : \"2020-02-15\",\n  \"end\" : \"2020-02-16\",\n  \"_id\" : \"FOO12\",\n  \"title\" : \"Workshop about cheese\",\n  \"type\" : \"event\"\n}, {\n  \"topics\" : [ {\n    \"id\" : 2,\n    \"desc\" : \"How to make nice cheese\"\n  }, {\n    \"id\" : 2,\n    \"desc\" : \"How to make nice cheese\"\n  } ],\n  \"start\" : \"2020-02-15\",\n  \"end\" : \"2020-02-16\",\n  \"_id\" : \"FOO12\",\n  \"title\" : \"Workshop about cheese\",\n  \"type\" : \"event\"\n} ]";
-            
-            var example = exampleJson != null
-            ? JsonSerializer.Deserialize<List<Event>>(exampleJson)
-            : default(List<Event>);
-            //TODO: Change the data returned
-            return new ObjectResult(example);
         }
 
         /// <summary>
@@ -208,28 +170,15 @@ namespace IO.Swagger.Controllers
         [SwaggerResponse(statusCode: 400, type: typeof(ProblemDetails), description: "Validation error, invalid event")]
         [SwaggerResponse(statusCode: 404, type: typeof(ProblemDetails), description: "Event with given id not found")]
         [SwaggerResponse(statusCode: 500, type: typeof(ProblemDetails), description: "Unexpected error  /")]
-        public virtual IActionResult EventUpdate([FromBody]Event _event, [FromRoute][Required]string id)
+        public virtual async Task<IActionResult> EventUpdate([FromBody] Event _event, [FromRoute] [Required] string id)
         { 
-            //TODO: Uncomment the next line to return response 200 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(200, default(List<Event>));
+            var evt = await _dbContext.FindAsync<Event>(id);
+            if (evt == null)
+                return StatusCode(404);
+            _dbContext.Entry(evt).CurrentValues.SetValues(_event);
+            await _dbContext.SaveChangesAsync();
 
-            //TODO: Uncomment the next line to return response 400 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(400, default(ProblemDetails));
-
-            //TODO: Uncomment the next line to return response 404 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(404, default(ProblemDetails));
-
-            //TODO: Uncomment the next line to return response 500 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(500, default(ProblemDetails));
-
-            string exampleJson = null;
-            exampleJson = "[ {\n  \"topics\" : [ {\n    \"id\" : 2,\n    \"desc\" : \"How to make nice cheese\"\n  }, {\n    \"id\" : 2,\n    \"desc\" : \"How to make nice cheese\"\n  } ],\n  \"start\" : \"2020-02-15\",\n  \"end\" : \"2020-02-16\",\n  \"_id\" : \"FOO12\",\n  \"title\" : \"Workshop about cheese\",\n  \"type\" : \"event\"\n}, {\n  \"topics\" : [ {\n    \"id\" : 2,\n    \"desc\" : \"How to make nice cheese\"\n  }, {\n    \"id\" : 2,\n    \"desc\" : \"How to make nice cheese\"\n  } ],\n  \"start\" : \"2020-02-15\",\n  \"end\" : \"2020-02-16\",\n  \"_id\" : \"FOO12\",\n  \"title\" : \"Workshop about cheese\",\n  \"type\" : \"event\"\n} ]";
-            
-            var example = exampleJson != null
-            ? JsonSerializer.Deserialize<List<Event>>(exampleJson)
-            : default(List<Event>);
-            //TODO: Change the data returned
-            return new ObjectResult(example);
+            return EventGetAll();
         }
     }
 }

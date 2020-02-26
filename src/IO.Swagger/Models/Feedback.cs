@@ -13,6 +13,7 @@ using System.Text;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace IO.Swagger.Models
 { 
@@ -23,12 +24,21 @@ namespace IO.Swagger.Models
     public partial class Feedback : IEquatable<Feedback>
     { 
         /// <summary>
+        /// Id of this event 
+        /// </summary>
+        /// <value>Id of this event </value>
+        [DataMember(Name="_id")]
+        [JsonPropertyName("_id")]
+        public string Id { get; set; }
+        
+        /// <summary>
         /// Event id 
         /// </summary>
         /// <value>Event id </value>
         [Required]
         [DataMember(Name="event")]
-        public string Event { get; set; }
+        [JsonPropertyName("event")]
+        public string EventId { get; set; }
 
         /// <summary>
         /// Topic id 
@@ -68,7 +78,7 @@ namespace IO.Swagger.Models
         {
             var sb = new StringBuilder();
             sb.Append("class Feedback {\n");
-            sb.Append("  Event: ").Append(Event).Append("\n");
+            sb.Append("  Event: ").Append(EventId).Append("\n");
             sb.Append("  Topic: ").Append(Topic).Append("\n");
             sb.Append("  Rating: ").Append(Rating).Append("\n");
             sb.Append("  Comment: ").Append(Comment).Append("\n");
@@ -110,9 +120,9 @@ namespace IO.Swagger.Models
 
             return 
                 (
-                    Event == other.Event ||
-                    Event != null &&
-                    Event.Equals(other.Event)
+                    EventId == other.EventId ||
+                    EventId != null &&
+                    EventId.Equals(other.EventId)
                 ) && 
                 (
                     Topic == other.Topic ||
@@ -146,8 +156,8 @@ namespace IO.Swagger.Models
             {
                 var hashCode = 41;
                 // Suitable nullity checks etc, of course :)
-                    if (Event != null)
-                    hashCode = hashCode * 59 + Event.GetHashCode();
+                    if (EventId != null)
+                    hashCode = hashCode * 59 + EventId.GetHashCode();
                     if (Topic != null)
                     hashCode = hashCode * 59 + Topic.GetHashCode();
                     if (Rating != null)

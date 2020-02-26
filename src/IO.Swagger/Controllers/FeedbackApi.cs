@@ -13,7 +13,9 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
 using IO.Swagger.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using IO.Swagger.Models;
@@ -27,6 +29,13 @@ namespace IO.Swagger.Controllers
     [ApiController]
     public class FeedbackApiController : ControllerBase
     { 
+        private readonly ApplicationDbContext _dbContext;
+
+        public FeedbackApiController(ApplicationDbContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -42,25 +51,12 @@ namespace IO.Swagger.Controllers
         [SwaggerResponse(statusCode: 200, type: typeof(Feedback), description: "Feedback object with id")]
         [SwaggerResponse(statusCode: 400, type: typeof(ProblemDetails), description: "Validation error with feedback")]
         [SwaggerResponse(statusCode: 500, type: typeof(ProblemDetails), description: "Unexpected error")]
-        public virtual IActionResult FeedbackCreate([FromBody]Feedback feedback)
+        public virtual async Task<IActionResult> FeedbackCreate([FromBody] Feedback feedback)
         { 
-            //TODO: Uncomment the next line to return response 200 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(200, default(Feedback));
-
-            //TODO: Uncomment the next line to return response 400 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(400, default(ProblemDetails));
-
-            //TODO: Uncomment the next line to return response 500 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(500, default(ProblemDetails));
-
-            string exampleJson = null;
-            exampleJson = "{\n  \"sentiment\" : 0.542,\n  \"rating\" : 4.0,\n  \"topic\" : 3,\n  \"comment\" : \"This is was really interesting\",\n  \"event\" : \"FOO12\"\n}";
-            
-            var example = exampleJson != null
-            ? JsonSerializer.Deserialize<Feedback>(exampleJson)
-            : default(Feedback);
-            //TODO: Change the data returned
-            return new ObjectResult(example);
+            feedback.Id = string.IsNullOrEmpty(feedback.Id) ? Guid.NewGuid().ToString("D") : feedback.Id;
+            _dbContext.Feedback.Add(feedback);
+            await _dbContext.SaveChangesAsync();
+            return new ObjectResult(feedback);
         }
 
         /// <summary>
@@ -78,21 +74,11 @@ namespace IO.Swagger.Controllers
         [SwaggerResponse(statusCode: 200, type: typeof(List<Feedback>), description: "An array of feedback, empty array if topic or event not found")]
         [SwaggerResponse(statusCode: 500, type: typeof(ProblemDetails), description: "Unexpected error")]
         public virtual IActionResult FeedbackGet([FromRoute][Required]string eventid, [FromRoute][Required]int? topicid)
-        { 
-            //TODO: Uncomment the next line to return response 200 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(200, default(List<Feedback>));
-
-            //TODO: Uncomment the next line to return response 500 or use other options such as return this.NotFound(), return this.BadRequest(..), ...
-            // return StatusCode(500, default(ProblemDetails));
-
-            string exampleJson = null;
-            exampleJson = "[ {\n  \"sentiment\" : 0.542,\n  \"rating\" : 4.0,\n  \"topic\" : 3,\n  \"comment\" : \"This is was really interesting\",\n  \"event\" : \"FOO12\"\n}, {\n  \"sentiment\" : 0.542,\n  \"rating\" : 4.0,\n  \"topic\" : 3,\n  \"comment\" : \"This is was really interesting\",\n  \"event\" : \"FOO12\"\n} ]";
-            
-            var example = exampleJson != null
-            ? JsonSerializer.Deserialize<List<Feedback>>(exampleJson)
-            : default(List<Feedback>);
-            //TODO: Change the data returned
-            return new ObjectResult(example);
+        {
+            var query = _dbContext.Feedback.Where(x => x.EventId == eventid);
+            if (topicid != null)
+                query = query.Where(x => x.Topic == topicid);
+            return new ObjectResult(query.ToArray());
         }
     }
 }

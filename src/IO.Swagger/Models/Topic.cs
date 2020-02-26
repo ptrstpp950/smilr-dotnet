@@ -13,6 +13,7 @@ using System.Text;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Xml;
 
 namespace IO.Swagger.Models
@@ -38,6 +39,8 @@ namespace IO.Swagger.Models
         [Required]
         [DataMember(Name="desc")]
         public string Desc { get; set; }
+        
+        public string EventId { get; set; }
 
         /// <summary>
         /// Returns the string presentation of the object
