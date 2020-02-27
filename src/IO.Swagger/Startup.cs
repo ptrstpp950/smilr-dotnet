@@ -96,6 +96,7 @@ namespace IO.Swagger
             dataContext.Database.Migrate();
             app
                 .UseMvc()
+                .UseCors(x=>x.AllowAnyOrigin())
                 .UseDefaultFiles()
                 .UseStaticFiles()
                 .UseSwagger()
