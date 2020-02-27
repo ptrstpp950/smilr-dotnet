@@ -33,6 +33,9 @@ namespace IO.Swagger
         private readonly IHostingEnvironment _hostingEnv;
 
         private IConfiguration Configuration { get; }
+        
+        private const string AllowAllOriginsPolicy = "AllowAllOriginsPolicy";
+
 
         /// <summary>
         /// Constructor
@@ -51,6 +54,14 @@ namespace IO.Swagger
         /// <param name="services"></param>
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options =>
+            {
+                options.AddPolicy(AllowAllOriginsPolicy,
+                    builder =>
+                    {
+                        builder.AllowAnyOrigin();
+                    });
+            });
             // Add framework services.
             services
                 .AddControllers(options => options.EnableEndpointRouting = false)
@@ -83,7 +94,6 @@ namespace IO.Swagger
                     //c.OperationFilter<GeneratePathParamsValidationFilter>();
                 });
         }
-
         /// <summary>
         /// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         /// </summary>
@@ -95,8 +105,9 @@ namespace IO.Swagger
         {
             dataContext.Database.Migrate();
             app
+                .UseCors(AllowAllOriginsPolicy)
                 .UseMvc()
-                .UseCors(x=>x.AllowAnyOrigin())
+                
                 .UseDefaultFiles()
                 .UseStaticFiles()
                 .UseSwagger()
