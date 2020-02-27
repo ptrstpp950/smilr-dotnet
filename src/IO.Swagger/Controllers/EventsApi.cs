@@ -123,9 +123,28 @@ namespace IO.Swagger.Controllers
         [SwaggerOperation("EventGetFiltered")]
         [SwaggerResponse(statusCode: 200, type: typeof(List<Event>), description: "An array of events")]
         [SwaggerResponse(statusCode: 500, type: typeof(ProblemDetails), description: "Unexpected error")]
-        public virtual IActionResult EventGetFiltered([FromRoute][Required]DateTimeOffset time)
+        public virtual IActionResult EventGetFiltered([FromRoute][Required]string time)
         {
-            return new ObjectResult(_dbContext.Events.Where(x => x.Start >= time).Select(x => x).ToArray());
+            var today = DateTime.Today;
+            switch (time)
+            {
+                case "active":
+                    return new ObjectResult(_dbContext.Events.Where(x => x.Start <= today && x.End >= today)
+                        .Select(x => x).ToArray()); 
+                case "future":
+                    return new ObjectResult(_dbContext.Events.Where(x => x.Start >= today)
+                        .Select(x => x).ToArray());
+                case "past":
+                    return new ObjectResult(_dbContext.Events.Where(x => x.End <= today)
+                        .Select(x => x).ToArray());
+                default:
+                    return new ObjectResult(new ProblemDetails()
+                    {
+                        Error = true, Title = "ValidationError",
+                        Details = "Supplied time value must be one of: [active, future, past]"
+                    }) {StatusCode = 500};
+            }
+            
         }
 
         /// <summary>
