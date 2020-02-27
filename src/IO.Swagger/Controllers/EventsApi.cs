@@ -173,7 +173,7 @@ namespace IO.Swagger.Controllers
         [SwaggerResponse(statusCode: 500, type: typeof(ProblemDetails), description: "Unexpected error  /")]
         public virtual async Task<IActionResult> EventGetSingle([FromRoute] [Required] string id)
         {
-            var evt = await _dbContext.FindAsync<Event>(id);
+            var evt = await _dbContext.Events.Include(x => x.Topics).SingleOrDefaultAsync(x => x.Id == id);
             if (evt == null)
                 return StatusCode(404);
             return new ObjectResult(evt);
