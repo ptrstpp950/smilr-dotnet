@@ -15,6 +15,7 @@ using Swashbuckle.AspNetCore.Annotations;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text.Json;
 using System.Threading.Tasks;
 using IO.Swagger.Attributes;
@@ -107,7 +108,8 @@ namespace IO.Swagger.Controllers
         [SwaggerResponse(statusCode: 500, type: typeof(ProblemDetails), description: "Unexpected error")]
         public virtual IActionResult EventGetAll()
         { 
-            return new ObjectResult(_dbContext.Events.Select(x => x).ToArray());
+            return new ObjectResult(_dbContext.Events
+                .Include(x=>x.Topics).Select(x => x).ToArray());
         }
 
         /// <summary>
@@ -126,17 +128,19 @@ namespace IO.Swagger.Controllers
         public virtual IActionResult EventGetFiltered([FromRoute][Required]string time)
         {
             var today = DateTime.Today;
+            Expression<Func<Event, bool>> expression;
+
             switch (time)
             {
                 case "active":
-                    return new ObjectResult(_dbContext.Events.Where(x => x.Start <= today && x.End >= today)
-                        .Select(x => x).ToArray()); 
+                    expression = x => x.Start <= today && x.End >= today;
+                    break;
                 case "future":
-                    return new ObjectResult(_dbContext.Events.Where(x => x.Start >= today)
-                        .Select(x => x).ToArray());
+                    expression = x => x.Start >= today;
+                    break;
                 case "past":
-                    return new ObjectResult(_dbContext.Events.Where(x => x.End <= today)
-                        .Select(x => x).ToArray());
+                    expression = x => x.End <= today;
+                    break;
                 default:
                     return new ObjectResult(new ProblemDetails()
                     {
@@ -144,7 +148,12 @@ namespace IO.Swagger.Controllers
                         Details = "Supplied time value must be one of: [active, future, past]"
                     }) {StatusCode = 500};
             }
-            
+
+            var events = _dbContext.Events
+                .Where(expression)
+                .Include(x=>x.Topics)
+                .Select(x => x).ToArray();
+            return new ObjectResult(events); 
         }
 
         /// <summary>
